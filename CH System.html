@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>CH RP System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --bg:#020617;
+  --card:#111827;
+  --primary:#38bdf8;
+  --danger:#ef4444;
+  --ok:#22c55e;
+  --warn:#facc15;
+  --text:#fff;
+  --muted:#9ca3af;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+/* ===== SPLASH ===== */
+#splash{
+  position:fixed;
+  inset:0;
+  background:linear-gradient(135deg,#020617,#020617,#111827);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+}
+
+.logo{
+  font-size:32px;
+  font-weight:bold;
+  color:var(--primary);
+  letter-spacing:1px;
+}
+
+.beta{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+.loader{
+  width:200px;
+  height:6px;
+  background:#1f2933;
+  border-radius:10px;
+  margin-top:25px;
+  overflow:hidden;
+}
+
+.loader span{
+  display:block;
+  height:100%;
+  width:0;
+  background:var(--primary);
+  animation:load 2s forwards;
+}
+
+@keyframes load{
+  to{width:100%}
+}
+
+/* ===== CONTAINERS ===== */
+.container{
+  max-width:1400px;
+  margin:auto;
+  padding:20px;
+}
+
+.hidden{display:none}
+
+/* ===== HOME ===== */
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
+  margin-top:60px;
+}
+
+.mode-card{
+  background:var(--card);
+  border-radius:16px;
+  padding:30px;
+  text-align:center;
+  cursor:pointer;
+  transition:.2s;
+  border:1px solid #1f2933;
+}
+
+.mode-card:hover{
+  transform:translateY(-6px);
+  border-color:var(--primary);
+}
+
+.mode-card .icon{
+  font-size:48px;
+  margin-bottom:15px;
+}
+
+.mode-card h3{
+  margin:10px 0;
+  color:var(--primary);
+}
+
+/* ===== COMMON ===== */
+.card{
+  background:var(--card);
+  border-radius:12px;
+  padding:16px;
+  margin-bottom:15px;
+  border:1px solid #1f2933;
+}
+
+input,textarea{
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  background:#020617;
+  color:#fff;
+}
+
+textarea{resize:none}
+
+button{
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.btn{background:var(--primary);color:#020617}
+.btn-danger{background:var(--danger);color:#fff}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+
+small{color:var(--muted)}
+
+.ok{color:var(--ok);font-weight:bold}
+.pendente{color:var(--warn);font-weight:bold}
+
+/* ===== MODAL ===== */
+#modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+}
+
+.modal-box{
+  background:#020617;
+  padding:25px;
+  border-radius:14px;
+  max-width:320px;
+  width:90%;
+  text-align:center;
+  border:1px solid #1f2933;
+}
+
+.modal-box h4{margin:0 0 10px}
+.modal-box p{font-size:14px;color:var(--muted)}
+</style>
+</head>
+
+<body>
+
+<div id="splash">
+  <div class="logo">CH RP System</div>
+  <div class="beta">versão 1.0 Beta</div>
+  <div class="loader"><span></span></div>
+</div>
+
+<div id="modal">
+  <div class="modal-box">
+    <h4 id="modalTitle"></h4>
+    <p id="modalMsg"></p>
+    <br>
+    <button class="btn" onclick="closeModal()">OK</button>
+  </div>
+</div>
+
+<div id="home" class="container hidden">
+  <div class="cards">
+    <div class="mode-card" onclick="openColetor()">
+      <div class="icon">📦</div>
+      <h3>Modo Coletor</h3>
+      <small>Recebimento operacional</small>
+    </div>
+
+    <div class="mode-card" onclick="openAdmin()">
+      <div class="icon">💻</div>
+      <h3>Modo Admin</h3>
+      <small>Cadastro e gestão de DT</small>
+    </div>
+  </div>
+</div>
+
+<div id="coletor" class="container hidden">
+
+<h2 style="color:var(--primary);text-align:center">Recebimento - Coletor</h2>
+
+<div id="loginBox" class="card">
+  <div class="grid-2">
+    <input id="email" placeholder="Email">
+    <input id="senha" type="password" placeholder="Senha">
+  </div><br>
+  <button class="btn" onclick="login()">Entrar</button>
+</div>
+
+<div id="dtBox" class="card hidden">
+  <div class="grid-2">
+    <input id="dtInput" placeholder="Digite a DT">
+    <button class="btn" onclick="buscarDT()">Buscar</button>
+  </div>
+</div>
+
+<div id="cabecalho" class="hidden"></div>
+<div id="itensBox" class="hidden"></div>
+
+</div>
+
+<div id="admin" class="container hidden">
+<h2 style="color:var(--primary);text-align:center">Admin - Cadastro de DT</h2>
+
+<div id="adminLoginBox" class="card">
+  <div class="grid-2">
+    <input id="adminEmail" placeholder="Email Admin">
+    <input id="adminSenha" type="password" placeholder="Senha Admin">
+  </div><br>
+  <button class="btn" onclick="loginAdmin()">Acessar Gestão</button>
+</div>
+
+<div id="adminContent" class="hidden">
+    <div class="card grid-4">
+      <input id="dt" placeholder="DT">
+      <input id="remessa" placeholder="Remessa">
+      <input id="ordem" placeholder="Ordem">
+      <input id="statusSeparacao" placeholder="Status Separação">
+      <input id="dataAgenda" type="date">
+      <input id="horaAgenda" type="time">
+      <input id="agendaPrevia" placeholder="Agenda / Prévia">
+      <input id="cliente" placeholder="Cliente">
+      <input id="tipoCarga" placeholder="Tipo de Carga">
+      <input id="frete" placeholder="Frete">
+      <input id="mercado" placeholder="Mercado">
+      <input id="perfilCarga" placeholder="Perfil da Carga">
+    </div><br>
+
+    <div class="card grid-3">
+      <input id="pesoTotal" type="number" placeholder="Peso Total (kg)">
+      <input id="volumeTotal" type="number" placeholder="Volume (m³)">
+      <input id="skus" type="number" placeholder="SKU's">
+    </div><br>
+
+    <textarea id="observacao" class="card" placeholder="Observações"></textarea>
+
+    <hr style="border-color:#1f2933">
+
+    <h3>Itens</h3>
+    <div class="card grid-4">
+      <input id="item" placeholder="Item">
+      <input id="descricao" placeholder="Descrição">
+      <input id="plPrevisto" type="number" placeholder="PL Previsto">
+      <input id="cxPrevisto" type="number" placeholder="CX HE Prevista">
+    </div><br>
+
+    <button class="btn" onclick="adicionarItem()">Adicionar Item</button>
+
+    <table class="card" style="width:100%;margin-top:10px">
+    <thead>
+    <tr><th>Item</th><th>Descrição</th><th>PL</th><th>CX</th><th></th></tr>
+    </thead>
+    <tbody id="listaItens"></tbody>
+    </table>
+
+    <br>
+    <button class="btn-danger" onclick="salvarDT()">SALVAR DT</button>
+</div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyBIV9xcskRGK-29gheAffS0Jb344WcQ34Q",
+  authDomain:"recebimento-coletor.firebaseapp.com",
+  projectId:"recebimento-coletor"
+});
+
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* ===== SPLASH ===== */
+setTimeout(()=>{
+  splash.style.display="none";
+  home.classList.remove("hidden");
+},2200);
+
+/* ===== MODAL ===== */
+window.showModal=(t,m)=>{
+  modalTitle.innerText=t;
+  modalMsg.innerText=m;
+  modal.style.display="flex";
+}
+window.closeModal=()=>modal.style.display="none";
+
+/* ===== NAV ===== */
+window.openColetor=()=>{
+  home.classList.add("hidden");
+  coletor.classList.remove("hidden");
+}
+window.openAdmin=()=>{
+  home.classList.add("hidden");
+  admin.classList.remove("hidden");
+}
+
+/* ===== COLETOR ===== */
+let dadosDT=null, refDT=null;
+
+window.login=async()=>{
+  try{
+    await signInWithEmailAndPassword(auth,email.value,senha.value);
+    loginBox.classList.add("hidden");
+    dtBox.classList.remove("hidden");
+  }catch{
+    showModal("Erro","Email ou senha inválidos");
+  }
+};
+
+/* ===== LOGIN ADMIN DINÂMICO ===== */
+window.loginAdmin=async()=>{
+  try{
+    const userCred = await signInWithEmailAndPassword(auth, adminEmail.value, adminSenha.value);
+    const userEmail = userCred.user.email;
+    
+    // Extrai o domínio do e-mail (tudo após o @)
+    const domain = userEmail.split('@')[1];
+
+    // Condição: qualquer e-mail que contenha 'admin' no domínio
+    if(domain && domain.includes("admin")){
+        adminLoginBox.classList.add("hidden");
+        adminContent.classList.remove("hidden");
+    } else {
+        await signOut(auth);
+        showModal("Acesso Negado","Este e-mail não pertence a um domínio administrativo autorizado.");
+    }
+  }catch(e){
+    showModal("Erro","Email ou senha de admin inválidos");
+  }
+};
+
+window.buscarDT=async()=>{
+  refDT=doc(db,"recebimentos",dtInput.value);
+  const snap=await getDoc(refDT);
+  if(!snap.exists()) return showModal("Erro","DT não encontrada");
+  dadosDT=snap.data();
+  if(dadosDT.status==="FINALIZADA")
+    return showModal("Bloqueado","DT finalizada");
+  renderCabecalho();
+  renderItens();
+};
+
+function renderCabecalho(){
+  cabecalho.classList.remove("hidden");
+  cabecalho.innerHTML=`<div class="card"><b>DT:</b> ${dadosDT.dt} | <b>Cliente:</b> ${dadosDT.cliente}</div>`;
+}
+
+function renderItens(){
+  itensBox.classList.remove("hidden");
+  itensBox.innerHTML="";
+  Object.keys(dadosDT.itens).forEach(cod=>{
+    const it=dadosDT.itens[cod];
+    itensBox.innerHTML+=`
+    <div class="card">
+      <b>${cod}</b><br><small>${it.descricao}</small><br><br>
+      <div class="grid-3">
+        <div>PL: ${it.plRecebido}/${it.plPrevisto}</div>
+        <div>CX: ${it.cxRecebido}/${it.cxPrevisto}</div>
+        <div class="${it.plRecebido>=it.plPrevisto && it.cxRecebido>=it.cxPrevisto?'ok':'pendente'}">
+          ${it.plRecebido>=it.plPrevisto?'OK':'Pendente'}
+        </div>
+      </div><br>
+      <div class="grid-2">
+        <input id="pl_${cod}" placeholder="PL">
+        <input id="cx_${cod}" placeholder="CX">
+      </div><br>
+      <button class="btn" onclick="receber('${cod}')">Registrar</button>
+    </div>`;
+  });
+}
+
+window.receber=async(cod)=>{
+  const it=dadosDT.itens[cod];
+  it.plRecebido+=Number(document.getElementById(`pl_${cod}`).value||0);
+  it.cxRecebido+=Number(document.getElementById(`cx_${cod}`).value||0);
+  await updateDoc(refDT,{itens:dadosDT.itens});
+  renderItens();
+};
+
+/* ===== GESTÃO ADMIN ===== */
+let itens={};
+
+window.adicionarItem=()=>{
+  if(!item.value||!descricao.value)
+    return showModal("Atenção","Item e descrição obrigatórios");
+  itens[item.value]={descricao:descricao.value,plPrevisto:+plPrevisto.value,cxPrevisto:+cxPrevisto.value,plRecebido:0,cxRecebido:0};
+  renderLista();
+  item.value=descricao.value=plPrevisto.value=cxPrevisto.value="";
+};
+
+function renderLista(){
+  listaItens.innerHTML="";
+  Object.keys(itens).forEach(cod=>{
+    listaItens.innerHTML+=`
+    <tr>
+      <td>${cod}</td>
+      <td>${itens[cod].descricao}</td>
+      <td>${itens[cod].plPrevisto}</td>
+      <td>${itens[cod].cxPrevisto}</td>
+      <td><button class="btn-danger" onclick="delete itens['${cod}'];renderLista()">X</button></td>
+    </tr>`;
+  });
+}
+
+window.salvarDT=async()=>{
+  if(!dt.value||!Object.keys(itens).length)
+    return showModal("Erro","DT e itens obrigatórios");
+  await setDoc(doc(db,"recebimentos",dt.value),{
+    dt:dt.value,remessa:remessa.value,ordem:ordem.value,statusSeparacao:statusSeparacao.value,
+    dataAgenda:dataAgenda.value,horaAgenda:horaAgenda.value,agendaPrevia:agendaPrevia.value,
+    cliente:cliente.value,tipoCarga:tipoCarga.value,frete:frete.value,mercado:mercado.value,
+    perfilCarga:perfilCarga.value,pesoTotal:+pesoTotal.value,volumeTotal:+volumeTotal.value,
+    skus:+skus.value,observacao:observacao.value,status:"ABERTA",itens:itens,criadoEm:new Date()
+  });
+  showModal("Sucesso","DT cadastrada com sucesso");
+};
+</script>
+</body>
+</html>
