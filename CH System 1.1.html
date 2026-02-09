@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>CH RP System - v1.3.1.9</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --bg:#020617;
+  --card:#111827;
+  --primary:#38bdf8;
+  --danger:#ef4444;
+  --ok:#22c55e;
+  --warn:#facc15;
+  --text:#fff;
+  --muted:#9ca3af;
+  --border:#1f2933;
+}
+
+*{box-sizing:border-box}
+body{ margin:0; font-family:Arial, sans-serif; background:var(--bg); color:var(--text); line-height: 1.5; }
+
+.container{ max-width:1400px; margin:auto; padding:20px; }
+.hidden{display:none}
+.card{ background:var(--card); border-radius:12px; padding:16px; margin-bottom:15px; border:1px solid var(--border); }
+
+input, textarea, select { 
+  width:100%; padding:10px; border-radius:8px; border:1px solid #334155; 
+  background:#020617; color:#fff; margin-bottom: 8px; 
+}
+button{ padding:12px; border:none; border-radius:10px; font-weight:bold; cursor:pointer; transition: 0.2s; }
+button:active { transform: scale(0.98); }
+.btn{background:var(--primary);color:#020617}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-outline{background:transparent; border:1px solid var(--muted); color:var(--muted); margin-bottom:15px;}
+
+.grid-header { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 13px; }
+.grid-header div { border-bottom: 1px solid #1f2933; padding: 4px 0; }
+.grid-header b { color: var(--primary); margin-right: 5px; }
+
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--border); }
+th { background: #1e293b; color: var(--primary); font-size: 12px; text-transform: uppercase; }
+.col-input { width: 70px; margin-bottom: 0; padding: 6px; text-align: center; }
+
+#splash{ position:fixed; inset:0; background:var(--bg); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:999; }
+.logo{ font-size:32px; font-weight:bold; color:var(--primary); }
+.loader{ width:200px; height:6px; background:#1f2933; border-radius:10px; margin-top:25px; overflow:hidden; }
+.loader span{ display:block; height:100%; width:0; background:var(--primary); animation:load 2s forwards; }
+@keyframes load{ to{width:100%} }
+
+#modal{ position:fixed; inset:0; background:rgba(0,0,0,.85); display:none; align-items:center; justify-content:center; z-index:1000; }
+.modal-box{ background:#0f172a; padding:25px; border-radius:14px; max-width:400px; width:90%; text-align:center; border:2px solid var(--primary); }
+</style>
+</head>
+
+<body>
+
+<div id="splash">
+  <div class="logo">CH RP System</div>
+  <div class="loader"><span></span></div>
+</div>
+
+<div id="modal">
+  <div class="modal-box">
+    <h4 id="modalTitle"></h4>
+    <p id="modalMsg"></p><br>
+    <button class="btn" onclick="closeModal()">OK</button>
+  </div>
+</div>
+
+<div id="home" class="container hidden">
+  <div style="text-align:center; margin-bottom: 30px;">
+      <h1 style="color:var(--primary)">logo oficial</h1>
+  </div>
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 5vh;">
+    <button class="card" onclick="openMode('coletor')" style="height:200px; font-size:22px; color:#ffffff;">📦 COLETOR</button>
+    <button class="card" onclick="openMode('admin')" style="height:200px; font-size:22px; color:#ffffff;">💻 ADMIN</button>
+  </div>
+</div>
+
+<div id="coletor" class="container hidden">
+    <button class="btn-outline" onclick="location.reload()">⬅ Voltar ao Menu</button>
+    <h2 style="color:var(--primary);text-align:center">Recebimento Operacional</h2>
+    
+    <div id="loginBox" class="card">
+      <input id="email" placeholder="Usuário">
+      <input id="senha" type="password" placeholder="Senha">
+      <button class="btn" style="width:100%" onclick="login()">Entrar</button>
+    </div>
+
+    <div id="dtBox" class="card hidden">
+      <div style="display:flex; gap:10px">
+        <input id="dtInput" placeholder="Número da DT" style="margin:0">
+        <button class="btn" onclick="buscarDT()">Buscar</button>
+      </div>
+    </div>
+
+    <div id="cabecalhoDisplay" class="card hidden"></div>
+    
+    <div id="itensBox" class="card hidden" style="overflow-x:auto">
+      <table id="tabelaColetor">
+        <thead>
+          <tr>
+            <th>Item / Descrição</th>
+            <th>Já Recebido</th>
+            <th>Registrar Novo</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody id="listaItensColetor"></tbody>
+      </table>
+      <button id="btnFinalizar" class="btn-danger" style="width:100%; margin-top:20px; height:60px; font-size:18px" onclick="finalizarDT()">FINALIZAR DT</button>
+    </div>
+</div>
+
+<div id="admin" class="container hidden">
+    <button class="btn-outline" onclick="location.reload()">⬅ Voltar ao Menu</button>
+    <h2 style="color:var(--primary);text-align:center">Painel de Gestão</h2>
+    <div id="adminLoginBox" class="card">
+        <input id="adminEmail" placeholder="E-mail Admin">
+        <input id="adminSenha" type="password" placeholder="Senha">
+        <button class="btn" style="width:100%" onclick="loginAdmin()">Acessar</button>
+    </div>
+
+    <div id="adminContent" class="hidden">
+        <div class="card grid-header">
+            <div><b>DT:</b> <input id="dt" placeholder="..."></div>
+            <div><b>Remessa:</b> <input id="remessa" placeholder="..."></div>
+            <div><b>Ordem:</b> <input id="ordem" placeholder="..."></div>
+            <div><b>Status Separação:</b> <input id="statusSeparacao" placeholder="..."></div>
+            <div><b>Data Agenda:</b> <input id="dataAgenda" type="date"></div>
+            <div><b>Hora Agenda:</b> <input id="horaAgenda" type="time"></div>
+            <div><b>Agenda Previa:</b> <input id="agendaPrevia" placeholder="..."></div>
+            <div><b>Cliente:</b> <input id="cliente" placeholder="..."></div>
+            <div><b>Tipo Carga:</b> <input id="tipoCarga" placeholder="..."></div>
+            <div><b>Frete:</b> <input id="frete" placeholder="..."></div>
+            <div><b>Mercado:</b> <input id="mercado" placeholder="..."></div>
+            <div><b>Perfil Carga:</b> <input id="perfilCarga" placeholder="..."></div>
+            <div><b>Peso (kg):</b> <input id="pesoTotal" type="number" step="any"></div>
+            <div><b>Volume (m³):</b> <input id="volumeTotal" type="number" step="any"></div>
+            <div><b>SKU's:</b> <input id="skus" type="number"></div>
+        </div>
+        <textarea id="excelPaste" class="card" rows="3" placeholder="Cole aqui: Cód | Descrição | PL Prev | CX Prev"></textarea>
+        <button class="btn-warn" style="width:100%; margin-bottom: 20px;" onclick="importarExcel()">Processar Excel</button>
+        
+        <div class="card" style="overflow-x:auto">
+            <table id="tabelaAdmin">
+                <thead><tr><th>Cód</th><th>Descrição</th><th>PL Prev</th><th>CX Prev</th><th>Ação</th></tr></thead>
+                <tbody id="listaItensAdmin"></tbody>
+            </table>
+        </div>
+        <button id="btnSalvarDT" class="btn-danger" style="width: 100%; height: 60px; font-size: 20px" onclick="salvarDT()">SALVAR DT NO FIREBASE</button>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyBIV9xcskRGK-29gheAffS0Jb344WcQ34Q",
+  authDomain:"recebimento-coletor.firebaseapp.com",
+  projectId:"recebimento-coletor"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* NAV & UTILS */
+setTimeout(()=>{ splash.style.display="none"; home.classList.remove("hidden"); },2000);
+window.showModal=(t,m)=>{ modalTitle.innerText=t; modalMsg.innerText=m; modal.style.display="flex"; }
+window.closeModal=()=>modal.style.display="none";
+window.openMode=(m)=>{ document.querySelectorAll('.container').forEach(c => c.classList.add('hidden')); document.getElementById(m).classList.remove('hidden'); }
+
+/* ADMIN LOGIC */
+let itensAdmin = {};
+window.loginAdmin=async()=>{
+    try {
+        await setPersistence(auth, browserLocalPersistence);
+        await signInWithEmailAndPassword(auth, adminEmail.value, adminSenha.value);
+        adminLoginBox.classList.add('hidden'); adminContent.classList.remove('hidden');
+    } catch(e) { showModal("Erro", "Login Admin falhou."); }
+}
+
+window.importarExcel = () => {
+    const raw = excelPaste.value.split('\n');
+    raw.forEach(l => {
+        const c = l.split('\t');
+        if(c.length >= 2) {
+            itensAdmin[c[0].trim()] = { 
+                descricao: c[1].trim(), 
+                plPrevisto: Number(c[2])||0, 
+                cxPrevisto: Number(c[3])||0, 
+                plRecebido:0, 
+                cxRecebido:0 
+            };
+        }
+    });
+    renderAdmin(); excelPaste.value = "";
+}
+
+function renderAdmin(){
+    listaItensAdmin.innerHTML = "";
+    Object.keys(itensAdmin).forEach(k => {
+        listaItensAdmin.innerHTML += `<tr><td>${k}</td><td>${itensAdmin[k].descricao}</td><td>${itensAdmin[k].plPrevisto}</td><td>${itensAdmin[k].cxPrevisto}</td><td><button onclick="delete itensAdmin['${k}']; renderAdmin();">X</button></td></tr>`;
+    });
+}
+
+window.salvarDT=async()=>{
+    if(!dt.value) return showModal("Aviso", "Número da DT é obrigatório.");
+    btnSalvarDT.innerText = "SALVANDO..."; btnSalvarDT.disabled = true;
+    try {
+        await setDoc(doc(db, "recebimentos", dt.value), {
+            dt: dt.value, remessa: remessa.value, ordem: ordem.value, statusSeparacao: statusSeparacao.value,
+            dataAgenda: dataAgenda.value, horaAgenda: horaAgenda.value, agendaPrevia: agendaPrevia.value,
+            cliente: cliente.value, tipoCarga: tipoCarga.value, frete: frete.value, mercado: mercado.value,
+            perfilCarga: perfilCarga.value, pesoTotal: Number(pesoTotal.value), volumeTotal: Number(volumeTotal.value),
+            skus: Number(skus.value), status: "ABERTA", itens: itensAdmin, criadoEm: new Date().toISOString()
+        });
+        showModal("Sucesso", "DT salva!"); setTimeout(()=>location.reload(), 1500);
+    } catch(e) { btnSalvarDT.disabled = false; btnSalvarDT.innerText = "SALVAR DT"; showModal("Erro", e.message); }
+}
+
+/* COLETOR LOGIC */
+let dadosDT = null;
+window.login=async()=>{
+    try {
+        await setPersistence(auth, browserLocalPersistence);
+        await signInWithEmailAndPassword(auth, email.value, senha.value);
+        loginBox.classList.add('hidden'); dtBox.classList.remove('hidden');
+    } catch(e) { showModal("Erro", "Login falhou."); }
+}
+
+window.buscarDT=async()=>{
+    const snap = await getDoc(doc(db, "recebimentos", dtInput.value));
+    if(!snap.exists()) return showModal("Erro", "DT inexistente.");
+    dadosDT = snap.data();
+    renderColetor();
+}
+
+function renderColetor(){
+    cabecalhoDisplay.classList.remove('hidden');
+    cabecalhoDisplay.innerHTML = `
+        <h3 style="margin:0 0 10px; color:var(--primary)">Dados da DT: ${dadosDT.dt}</h3>
+        <div class="grid-header">
+            <div><b>Cliente:</b> ${dadosDT.cliente || '-'}</div>
+            <div><b>Status:</b> ${dadosDT.status || '-'}</div>
+            <div><b>Data Agenda:</b> ${dadosDT.dataAgenda || '-'}</div>
+            <div><b>Hora Agenda:</b> ${dadosDT.horaAgenda || '-'}</div>
+            <div><b>Remessa:</b> ${dadosDT.remessa || '-'}</div>
+            <div><b>Ordem:</b> ${dadosDT.ordem || '-'}</div>
+            <div><b>Separação:</b> ${dadosDT.statusSeparacao || '-'}</div>
+            <div><b>Mercado:</b> ${dadosDT.mercado || '-'}</div>
+            <div><b>Tipo Carga:</b> ${dadosDT.tipoCarga || '-'}</div>
+            <div><b>Perfil:</b> ${dadosDT.perfilCarga || '-'}</div>
+            <div><b>Frete:</b> ${dadosDT.frete || '-'}</div>
+            <div><b>Agenda/Prévia:</b> ${dadosDT.agendaPrevia || '-'}</div>
+            <div><b>Peso:</b> ${dadosDT.pesoTotal || 0}kg</div>
+            <div><b>Volume:</b> ${dadosDT.volumeTotal || 0}m³</div>
+            <div><b>SKUs:</b> ${dadosDT.skus || 0}</div>
+        </div>
+    `;
+
+    itensBox.classList.remove('hidden');
+    listaItensColetor.innerHTML = "";
+    Object.keys(dadosDT.itens).forEach(k => {
+        const it = dadosDT.itens[k];
+        listaItensColetor.innerHTML += `
+            <tr>
+                <td><b>${k}</b><br><small>${it.descricao}</small></td>
+                <td>
+                  <b style="color:var(--ok)">PL: ${it.plRecebido} | CX: ${it.cxRecebido}</b>
+                </td>
+                <td>
+                    <input type="number" id="p_${k}" class="col-input" placeholder="+PL">
+                    <input type="number" id="c_${k}" class="col-input" placeholder="+CX">
+                </td>
+                <td><button class="btn" style="padding:8px" onclick="receber('${k}')">REGISTRAR</button></td>
+            </tr>
+        `;
+    });
+}
+
+window.receber=async(k)=>{
+    const pInput = document.getElementById('p_'+k);
+    const cInput = document.getElementById('c_'+k);
+    const p = Number(pInput.value) || 0;
+    const c = Number(cInput.value) || 0;
+    if(p === 0 && c === 0) return;
+
+    const item = dadosDT.itens[k];
+    const novoPl = item.plRecebido + p;
+    const novoCx = item.cxRecebido + c;
+
+    // TRAVA: NÃO RECEBER A MAIS (Valida contra o programado que está no banco)
+    if(novoPl > item.plPrevisto || novoCx > item.cxPrevisto){
+        return showModal("Bloqueado", `Quantidade excede o programado para este item!`);
+    }
+    
+    item.plRecebido = novoPl;
+    item.cxRecebido = novoCx;
+    
+    try {
+        await updateDoc(doc(db, "recebimentos", dadosDT.dt), { itens: dadosDT.itens });
+        renderColetor();
+        pInput.value = ""; cInput.value = "";
+    } catch(e) { showModal("Erro", "Falha ao sincronizar."); }
+}
+
+window.finalizarDT=async()=>{
+    if(!dadosDT) return;
+    
+    let pendente = false;
+
+    Object.keys(dadosDT.itens).forEach(k => {
+        const it = dadosDT.itens[k];
+        if(it.plRecebido < it.plPrevisto || it.cxRecebido < it.cxPrevisto){
+            pendente = true;
+        }
+    });
+
+    // TRAVA: NÃO FINALIZAR SE ESTIVER ABAIXO
+    if(pendente){
+        return showModal("Pendente", "Não é possível finalizar: existem itens com quantidades abaixo do programado.");
+    }
+
+    try {
+        await updateDoc(doc(db, "recebimentos", dadosDT.dt), { 
+            status: "FINALIZADA",
+            finalizadoEm: new Date().toISOString()
+        });
+        showModal("Sucesso", "DT Finalizada com sucesso!");
+        setTimeout(()=>location.reload(), 2000);
+    } catch(e) { showModal("Erro", "Erro ao finalizar no servidor."); }
+}
+
+</script>
+</body>
+</html>
